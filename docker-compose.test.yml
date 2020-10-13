@@ -1,0 +1,134 @@
+version: "3.7"
+
+networks:
+  uit-lib:
+    driver: bridge
+
+services:
+
+  monstache:
+    image: rwynn/monstache
+    container_name: c-monstache
+    working_dir: /app
+    command: -f ./monstache.test.config.toml
+    volumes:
+      - $PWD/monstache.test.config.toml:/app/monstache.test.config.toml
+    depends_on:
+      - mongo-0
+      - elasticsearch
+    #environment:
+    #  - MONSTACHE_MONGO_URL=mongo-0:27017
+    #  - MONSTACHE_ES_URLS=http://es7:9200
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    networks:
+      - uit-lib
+    healthcheck:
+      test: "wget -q -O - http://localhost:8080/healthz"
+      interval: 1s
+      timeout: 30s
+      retries: 300
+    restart: always
+
+  mongo-0:
+    image: mongo
+    logging:
+      driver: none
+    container_name: c-mongo
+    command: /scripts/mongo-run.sh
+    working_dir: /scripts
+    volumes:
+      - type: bind
+        source: ./mongodb/scripts
+        target: /scripts
+      - type: volume
+        source: mongodb_data
+        target: /data/db
+    environment:
+      MONGO_REPLICA_SET_NAME: rs0
+      MONGO_REPLICAS: mongo-0:27017
+      MONGO_REPLICA_SET_MEMBERS: "[{'_id':0,'host':'mongo-0:27017','priority':1}]"
+      MONGO_USER_ROOT_NAME: admin
+      MONGO_USER_ROOT_PASSWORD: admin123456
+      MONGO_AUTH_SOURCE: admin
+      MONGO_BIND_IP: "0.0.0.0"
+      # MONGO_DB_NAME: test
+      # MONGO_USER_ADMIN_NAME: admin-user
+      # MONGO_USER_ADMIN_PASSWORD: password
+      # MONGO_USER_APP_NAME: app-user
+      # MONGO_USER_APP_PASSWORD: password
+      # MONGO_USER_OPLOGGER_NAME: oplogger-user
+      # MONGO_USER_OPLOGGER_PASSWORD: password
+      # MONGO_USER_BACKUP_NAME: backup-user
+      # MONGO_USER_BACKUP_PASSWORD: password
+    ports:
+      - "27017:27017"
+    expose:
+      - "27017"
+    networks:
+      - uit-lib
+    healthcheck:
+      test: "[ -f /data/health.check ] && exit 0 || exit 1"
+      interval: 1s
+      timeout: 30s
+      retries: 300
+    restart: always
+
+  # monstache:
+  #   image: rwynn/monstache
+  #   container_name: c-monstache
+  #   environment:
+  #     MONSTACHE_MONGO_URL: mongodb://admin:admin123456@mongo-0:27017
+  #     MONSTACHE_ES_URLS: http://elasticsearch:9200
+  #     MONSTACHE_DIRECT_READ_NS: uit-library.book,uit-library.category
+  #   depends_on:
+  #     - mongo-0
+  #     - elasticsearch
+  #   ports:
+  #     - "8080:8080"
+  #   expose:
+  #     - "8080"
+  #   networks:
+  #     - uit-lib
+  #   healthcheck:
+  #     test: "wget -q -O - http://localhost:8080/healthz"
+  #     interval: 1s
+  #     timeout: 30s
+  #     retries: 300
+  #   restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.1
+    logging:
+      driver: none
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=datasearch
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - bootstrap.memory_lock=true
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    #  - ./elasticsearch/elasticsearch.config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+    expose:
+      - "9200"
+    networks:
+      - uit-lib
+    healthcheck:
+      test: "wget -q -O - http://elasticsearch:9200/_cat/health"
+      interval: 5s
+      timeout: 30s
+      retries: 300
+    restart: always
+
+
+volumes:
+  mongodb_data:
