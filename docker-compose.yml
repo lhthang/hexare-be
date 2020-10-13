@@ -24,7 +24,7 @@ services:
     expose:
       - "8080"
     networks:
-      - uit-lib
+      - hexare
     healthcheck:
       test: "wget -q -O - http://localhost:8080/healthz"
       interval: 1s
@@ -68,7 +68,7 @@ services:
     expose:
       - "27017"
     networks:
-      - uit-lib
+      - hexare
     healthcheck:
       test: "[ -f /data/health.check ] && exit 0 || exit 1"
       interval: 1s
@@ -98,7 +98,7 @@ services:
     expose:
       - "9200"
     networks:
-      - uit-lib
+      - hexare
     healthcheck:
       test: "wget -q -O - http://elasticsearch:9200/_cat/health"
       interval: 5s
