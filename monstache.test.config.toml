@@ -4,7 +4,7 @@ mongo-url = "mongodb://admin:admin123456@mongo-0:27017"
 
 elasticsearch-urls = ["http://elasticsearch:9200"]
 
-direct-read-namespaces = ["uit-library.book","uit-library.category"]
+direct-read-namespaces = ["hexare.post","hexare.user"]
 
 # frequently required settings
 
