@@ -1,0 +1,26 @@
+version: "3.7"
+
+networks:
+  hexare-be_hexare:
+    driver: bridge
+    external: true
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+
+services:
+
+  monstache:
+    image: rwynn/monstache
+    container_name: c-monstache
+    working_dir: /app
+    command: -f ./monstache.test.config.toml
+    volumes:
+      - $PWD/monstache.test.config.toml:/app/monstache.test.config.toml
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    networks:
+      - hexare-be_hexare
+    restart: unless-stopped

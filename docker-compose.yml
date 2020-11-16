@@ -2,35 +2,12 @@ version: "3.7"
 
 networks:
   hexare:
-    external: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
 
 services:
-
-  monstache:
-    image: rwynn/monstache
-    container_name: c-monstache
-    working_dir: /app
-    command: -f ./monstache.test.config.toml
-    volumes:
-      - $PWD/monstache.test.config.toml:/app/monstache.test.config.toml
-    depends_on:
-      - mongo-0
-      - elasticsearch
-    #environment:
-    #  - MONSTACHE_MONGO_URL=mongo-0:27017
-    #  - MONSTACHE_ES_URLS=http://es7:9200
-    ports:
-      - "8080:8080"
-    expose:
-      - "8080"
-    networks:
-      - hexare
-    healthcheck:
-      test: "wget -q -O - http://localhost:8080/healthz"
-      interval: 1s
-      timeout: 30s
-      retries: 300
-    restart: always
 
   mongo-0:
     image: mongo
